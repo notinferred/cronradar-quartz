@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+
+    <!-- Package Information -->
+    <PackageId>CronRadar.Quartz</PackageId>
+    <Version>0.0.1</Version>
+    <Authors>Administrator</Authors>
+    <Company>CronRadar</Company>
+    <PackageLicenseExpression>LicenseRef-Proprietary</PackageLicenseExpression>
+    <Product>CronRadar Quartz.NET Extension</Product>
+    <Description>Automatic monitoring for Quartz.NET scheduled jobs. Track job execution, detect failures, and get alerts with zero configuration. Simply add UseCronRadar() to your scheduler setup.</Description>
+    <Copyright>Copyright © CronRadar 2025</Copyright>
+    <PackageProjectUrl>https://cronradar.com</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/cronradar/cronradar-quartz</RepositoryUrl>
+    <PackageTags>cronradar;quartz;quartz.net;monitoring;scheduler;cron;job-monitoring;alerts;devops;enterprise</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReleaseNotes>Automatic monitoring for all Quartz.NET jobs. Just add UseCronRadar() to your scheduler configuration.</PackageReleaseNotes>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Build Configuration -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Depends on base CronRadar SDK -->
+    <PackageReference Include="CronRadar" Version="0.0.3" />
+
+    <!-- Quartz.NET dependency (peer dependency - user should have this already) -->
+    <PackageReference Include="Quartz" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

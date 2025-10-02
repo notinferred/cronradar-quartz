@@ -1,0 +1,8 @@
+is_global = true
+build_property.RootNamespace = CronRadar.Quartz
+build_property.ProjectDir = C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.CsWinRTUseWindowsUIXamlProjections = false
+build_property.EffectiveAnalysisLevelStyle = 
+build_property.EnableCodeStyleSeverity = 
