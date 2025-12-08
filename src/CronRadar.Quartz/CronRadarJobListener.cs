@@ -79,10 +79,10 @@ namespace CronRadar.Quartz
                 if (string.IsNullOrWhiteSpace(monitorKey))
                     return Task.CompletedTask;
 
-                // Use base SDK to ping
+                // Use base SDK to monitor
                 // We don't pass schedule here because the job is already registered
                 // via the scheduler listener or watcher
-                CronRadar.Ping(monitorKey);
+                CronRadar.Monitor(monitorKey);
             }
             catch
             {

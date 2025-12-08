@@ -24,14 +24,14 @@ namespace CronRadar.Quartz
         /// Example:
         /// <code>
         /// IScheduler scheduler = await StdSchedulerFactory.GetDefaultScheduler();
-        /// await scheduler.UseCronRadar();
+        /// await scheduler.MonitorAll();
         /// await scheduler.Start();
         /// </code>
         /// </summary>
         /// <param name="scheduler">The Quartz.NET scheduler instance</param>
         /// <param name="apiKey">Optional API key (defaults to CRONRADAR_API_KEY env var)</param>
         /// <returns>The scheduler instance for method chaining</returns>
-        public static async Task<IScheduler> UseCronRadar(this IScheduler scheduler, string apiKey = null)
+        public static async Task<IScheduler> MonitorAll(this IScheduler scheduler, string apiKey = null)
         {
             if (scheduler == null)
                 throw new ArgumentNullException(nameof(scheduler));
@@ -102,15 +102,15 @@ namespace CronRadar.Quartz
         }
 
         /// <summary>
-        /// Synchronous version of UseCronRadar for scenarios where async is not available.
+        /// Synchronous version of MonitorAll for scenarios where async is not available.
         /// Note: It's recommended to use the async version when possible.
         /// </summary>
         /// <param name="scheduler">The Quartz.NET scheduler instance</param>
         /// <param name="apiKey">Optional API key (defaults to CRONRADAR_API_KEY env var)</param>
         /// <returns>The scheduler instance for method chaining</returns>
-        public static IScheduler UseCronRadarSync(this IScheduler scheduler, string apiKey = null)
+        public static IScheduler MonitorAllSync(this IScheduler scheduler, string apiKey = null)
         {
-            return scheduler.UseCronRadar(apiKey).GetAwaiter().GetResult();
+            return scheduler.MonitorAll(apiKey).GetAwaiter().GetResult();
         }
 
         /// <summary>
