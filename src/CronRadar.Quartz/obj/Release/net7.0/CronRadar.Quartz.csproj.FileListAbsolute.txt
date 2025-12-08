@@ -1,0 +1,15 @@
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\obj\Release\net7.0\CronRadar.Quartz.csproj.AssemblyReference.cache
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\obj\Release\net7.0\CronRadar.Quartz.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\obj\Release\net7.0\CronRadar.Quartz.AssemblyInfoInputs.cache
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\obj\Release\net7.0\CronRadar.Quartz.AssemblyInfo.cs
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\obj\Release\net7.0\CronRadar.Quartz.csproj.CoreCompileInputs.cache
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\obj\Release\net7.0\CronRadar.Quartz.sourcelink.json
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\bin\Release\net7.0\CronRadar.Quartz.deps.json
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\bin\Release\net7.0\CronRadar.Quartz.dll
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\bin\Release\net7.0\CronRadar.Quartz.pdb
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\bin\Release\net7.0\CronRadar.Quartz.xml
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\obj\Release\net7.0\CronRadar.Quartz.dll
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\obj\Release\net7.0\refint\CronRadar.Quartz.dll
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\obj\Release\net7.0\CronRadar.Quartz.xml
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\obj\Release\net7.0\CronRadar.Quartz.pdb
+C:\Users\admin\Documents\GitHub\Cronradar\sdks\cronradar-quartz\src\CronRadar.Quartz\obj\Release\net7.0\ref\CronRadar.Quartz.dll
