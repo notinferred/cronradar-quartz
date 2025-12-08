@@ -20,7 +20,11 @@ namespace CronRadar.Quartz
 
         public CronRadarJobWatcher(IScheduler scheduler)
         {
-            _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
+            if (scheduler == null)
+            {
+                Console.WriteLine("[CronRadar.Quartz] ERROR: CronRadarJobWatcher constructor received null scheduler");
+            }
+            _scheduler = scheduler;
         }
 
         /// <summary>

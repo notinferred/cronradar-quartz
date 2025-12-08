@@ -34,7 +34,10 @@ namespace CronRadar.Quartz
         public static async Task<IScheduler> MonitorAll(this IScheduler scheduler, string apiKey = null)
         {
             if (scheduler == null)
-                throw new ArgumentNullException(nameof(scheduler));
+            {
+                Console.WriteLine("[CronRadar.Quartz] ERROR: scheduler parameter is null - cannot initialize monitoring");
+                return null;
+            }
 
             lock (_initLock)
             {
@@ -95,7 +98,7 @@ namespace CronRadar.Quartz
                 {
                     _initialized = false;
                 }
-                throw;
+                // Silent failure - don't throw to user code
             }
 
             return scheduler;
