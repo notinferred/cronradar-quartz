@@ -46,7 +46,7 @@ namespace CronRadar.Quartz
                         var jobName = GenerateReadableName(trigger.JobKey.Name);
 
                         // Use base SDK to sync monitor
-                        await CronRadar.SyncAsync(
+                        await CronRadar.SyncMonitorAsync(
                             monitorKey,
                             cronExpression,
                             source: "quartz",
