@@ -3,26 +3,19 @@ using System;
 namespace CronRadar.Quartz
 {
     /// <summary>
-    /// Add [CronRadar("monitor-key")] to any Quartz.NET job to customize monitoring.
-    /// By default, jobs are automatically monitored using their JobKey.
+    /// Add [CronRadar("custom-key")] to any Quartz.NET job to specify a custom monitor key.
+    /// By default, jobs are monitored using their normalized JobKey (group-name).
     /// Use this attribute to:
-    /// - Specify a custom monitor key
-    /// - Skip monitoring for specific jobs
+    /// - Specify a custom monitor key for easier identification
+    /// - Align the monitor key with other systems or naming conventions
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class CronRadarAttribute : Attribute
     {
         /// <summary>
         /// The custom monitor key for this job.
-        /// If null, the job's normalized JobKey will be used.
         /// </summary>
         public string? MonitorKey { get; }
-
-        /// <summary>
-        /// If true, this job will not be monitored by CronRadar.
-        /// Useful for internal maintenance jobs or high-frequency jobs.
-        /// </summary>
-        public bool Skip { get; set; }
 
         /// <summary>
         /// Creates a new CronRadar monitoring attribute with a custom monitor key.
@@ -31,16 +24,6 @@ namespace CronRadar.Quartz
         public CronRadarAttribute(string monitorKey)
         {
             MonitorKey = monitorKey;
-            Skip = false;
-        }
-
-        /// <summary>
-        /// Creates a new CronRadar attribute to skip monitoring for this job.
-        /// </summary>
-        public CronRadarAttribute()
-        {
-            MonitorKey = null;
-            Skip = false;
         }
     }
 }

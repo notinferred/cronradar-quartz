@@ -6,19 +6,23 @@ using Quartz;
 namespace CronRadar.Quartz
 {
     /// <summary>
-    /// Job listener that automatically pings CronRadar when jobs complete successfully.
-    /// Intercepts all job executions and sends pings using the base CronRadar SDK.
+    /// Job listener that automatically tracks job lifecycle for CronRadar monitoring.
+    /// Intercepts all job executions and sends start/complete/fail signals.
     /// </summary>
-    public class CronRadarJobListener : IJobListener
+    internal class CronRadarJobListener : IJobListener
     {
-        /// <summary>
-        /// Name of this listener
-        /// </summary>
+        private readonly string? _apiKey;
+
+        public CronRadarJobListener(string? apiKey)
+        {
+            _apiKey = apiKey;
+        }
+
         public string Name => "CronRadar.Quartz.JobListener";
 
         /// <summary>
         /// Called when a job is about to be executed.
-        /// Signals job start for lifecycle tracking.
+        /// Signals job start for lifecycle tracking with auto-registration.
         /// </summary>
         public async Task JobToBeExecuted(IJobExecutionContext context, CancellationToken cancellationToken = default)
         {
@@ -27,42 +31,40 @@ namespace CronRadar.Quartz
                 var jobType = context.JobDetail.JobType;
                 var jobKey = context.JobDetail.Key;
 
-                // Check for [CronRadar] attribute on the job class
-                var attribute = jobType.GetCustomAttributes(typeof(CronRadarAttribute), false);
-
-                string monitorKey = null;
-
-                if (attribute.Length > 0)
+                // Check for [SkipMonitor] attribute
+                var skipAttr = jobType.GetCustomAttributes(typeof(SkipMonitorAttribute), false);
+                if (skipAttr.Length > 0)
                 {
-                    var cronRadarAttr = (CronRadarAttribute)attribute[0];
-
-                    // If Skip is true, don't monitor this job
-                    if (cronRadarAttr.Skip)
-                        return;
-
-                    // Use custom monitor key from attribute if provided
-                    if (!string.IsNullOrWhiteSpace(cronRadarAttr.MonitorKey))
+                    if (CronRadar.DebugLoggingEnabled)
                     {
-                        monitorKey = CronRadarKeyNormalizer.Normalize(cronRadarAttr.MonitorKey);
+                        Console.WriteLine($"[CronRadar.Quartz] Skipping job {jobKey} due to [SkipMonitor] attribute");
                     }
+                    return;
                 }
 
-                // If no custom key from attribute, use normalized JobKey
-                if (string.IsNullOrWhiteSpace(monitorKey))
-                {
-                    monitorKey = CronRadarKeyNormalizer.Normalize(jobKey.Group, jobKey.Name);
-                }
-
-                // Skip if we couldn't determine a valid monitor key
+                // Get monitor key from attribute or use normalized JobKey
+                string monitorKey = GetMonitorKey(jobType, jobKey);
                 if (string.IsNullOrWhiteSpace(monitorKey))
                     return;
 
-                // Signal job start for lifecycle tracking
-                await CronRadar.StartJobAsync(monitorKey);
+                // Get schedule from trigger for auto-registration
+                string? schedule = GetScheduleFromTrigger(context.Trigger);
+
+                if (CronRadar.DebugLoggingEnabled && schedule != null)
+                {
+                    Console.WriteLine($"[CronRadar.Quartz] Starting job {monitorKey} with schedule {schedule}");
+                }
+
+                // Signal job start - API will auto-register if monitor doesn't exist
+                await CronRadar.StartJobAsync(monitorKey, schedule, _apiKey);
             }
-            catch
+            catch (Exception ex)
             {
-                // Silently ignore all errors - never break the job execution
+                // Never break job execution
+                if (CronRadar.DebugLoggingEnabled)
+                {
+                    Console.WriteLine($"[CronRadar.Quartz] Error in JobToBeExecuted: {ex.Message}");
+                }
             }
         }
 
@@ -71,7 +73,6 @@ namespace CronRadar.Quartz
         /// </summary>
         public Task JobExecutionVetoed(IJobExecutionContext context, CancellationToken cancellationToken = default)
         {
-            // Not needed
             return Task.CompletedTask;
         }
 
@@ -79,59 +80,113 @@ namespace CronRadar.Quartz
         /// Called after a job has been executed.
         /// Signals job completion or failure for lifecycle tracking.
         /// </summary>
-        public async Task JobWasExecuted(IJobExecutionContext context, JobExecutionException jobException, CancellationToken cancellationToken = default)
+        public async Task JobWasExecuted(IJobExecutionContext context, JobExecutionException? jobException, CancellationToken cancellationToken = default)
         {
             try
             {
                 var jobType = context.JobDetail.JobType;
                 var jobKey = context.JobDetail.Key;
 
-                // Check for [CronRadar] attribute on the job class
-                var attribute = jobType.GetCustomAttributes(typeof(CronRadarAttribute), false);
+                // Check for [SkipMonitor] attribute
+                var skipAttr = jobType.GetCustomAttributes(typeof(SkipMonitorAttribute), false);
+                if (skipAttr.Length > 0)
+                    return;
 
-                string monitorKey = null;
-
-                if (attribute.Length > 0)
-                {
-                    var cronRadarAttr = (CronRadarAttribute)attribute[0];
-
-                    // If Skip is true, don't monitor this job
-                    if (cronRadarAttr.Skip)
-                        return;
-
-                    // Use custom monitor key from attribute if provided
-                    if (!string.IsNullOrWhiteSpace(cronRadarAttr.MonitorKey))
-                    {
-                        monitorKey = CronRadarKeyNormalizer.Normalize(cronRadarAttr.MonitorKey);
-                    }
-                }
-
-                // If no custom key from attribute, use normalized JobKey
-                if (string.IsNullOrWhiteSpace(monitorKey))
-                {
-                    monitorKey = CronRadarKeyNormalizer.Normalize(jobKey.Group, jobKey.Name);
-                }
-
-                // Skip if we couldn't determine a valid monitor key
+                // Get monitor key
+                string monitorKey = GetMonitorKey(jobType, jobKey);
                 if (string.IsNullOrWhiteSpace(monitorKey))
                     return;
 
                 // Report success or failure
                 if (jobException != null)
                 {
-                    // Signal job failure for immediate alert
-                    await CronRadar.FailJobAsync(monitorKey, jobException.Message);
+                    if (CronRadar.DebugLoggingEnabled)
+                    {
+                        Console.WriteLine($"[CronRadar.Quartz] Job {monitorKey} failed: {jobException.Message}");
+                    }
+                    await CronRadar.FailJobAsync(monitorKey, jobException.Message, _apiKey);
                 }
                 else
                 {
-                    // Signal job completion for lifecycle tracking
-                    await CronRadar.CompleteJobAsync(monitorKey);
+                    if (CronRadar.DebugLoggingEnabled)
+                    {
+                        Console.WriteLine($"[CronRadar.Quartz] Job {monitorKey} completed successfully");
+                    }
+                    await CronRadar.CompleteJobAsync(monitorKey, _apiKey);
                 }
+            }
+            catch (Exception ex)
+            {
+                // Never break job execution
+                if (CronRadar.DebugLoggingEnabled)
+                {
+                    Console.WriteLine($"[CronRadar.Quartz] Error in JobWasExecuted: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the monitor key from attribute or normalized job key.
+        /// </summary>
+        private string GetMonitorKey(Type jobType, JobKey jobKey)
+        {
+            // Check for [CronRadar("custom-key")] attribute
+            var cronRadarAttr = jobType.GetCustomAttributes(typeof(CronRadarAttribute), false);
+            if (cronRadarAttr.Length > 0)
+            {
+                var attr = (CronRadarAttribute)cronRadarAttr[0];
+                if (!string.IsNullOrWhiteSpace(attr.MonitorKey))
+                {
+                    return CronRadarKeyNormalizer.Normalize(attr.MonitorKey);
+                }
+            }
+
+            // Use normalized JobKey
+            return CronRadarKeyNormalizer.Normalize(jobKey.Group, jobKey.Name);
+        }
+
+        /// <summary>
+        /// Extracts schedule from trigger for auto-registration.
+        /// </summary>
+        private string? GetScheduleFromTrigger(ITrigger trigger)
+        {
+            try
+            {
+                // Cron trigger - use the cron expression directly
+                if (trigger is ICronTrigger cronTrigger)
+                {
+                    return cronTrigger.CronExpressionString;
+                }
+
+                // Simple trigger - convert to approximate cron
+                if (trigger is ISimpleTrigger simpleTrigger && simpleTrigger.RepeatCount != 0)
+                {
+                    return ConvertIntervalToCron(simpleTrigger.RepeatInterval);
+                }
+
+                return null;
             }
             catch
             {
-                // Silently ignore all errors - never break the job execution
+                return null;
             }
+        }
+
+        /// <summary>
+        /// Converts a TimeSpan interval to an approximate cron expression.
+        /// </summary>
+        private string ConvertIntervalToCron(TimeSpan interval)
+        {
+            if (interval.TotalMinutes < 1) return "* * * * *";
+            if (interval.TotalMinutes == 1) return "* * * * *";
+            if (interval.TotalMinutes == 5) return "*/5 * * * *";
+            if (interval.TotalMinutes == 15) return "*/15 * * * *";
+            if (interval.TotalMinutes == 30) return "*/30 * * * *";
+            if (interval.TotalHours == 1) return "0 * * * *";
+            if (interval.TotalHours % 1 == 0 && interval.TotalHours < 24) return $"0 */{(int)interval.TotalHours} * * *";
+            if (interval.TotalDays == 1) return "0 0 * * *";
+            if (interval.TotalDays == 7) return "0 0 * * 0";
+            return "0 * * * *"; // Default to hourly
         }
     }
 }

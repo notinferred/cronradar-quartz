@@ -1,6 +1,8 @@
-# CronRadar.Quartz
+# CronRadar for Quartz.NET
 
-Monitor all Quartz.NET jobs automatically with zero configuration.
+[![NuGet](https://img.shields.io/nuget/v/CronRadar.Quartz.svg)](https://www.nuget.org/packages/CronRadar.Quartz/)
+
+**Monitor all Quartz.NET jobs automatically.**
 
 ## Installation
 
@@ -11,52 +13,21 @@ dotnet add package CronRadar.Quartz
 ## Quick Start
 
 ```csharp
-using Quartz;
-using CronRadar.Quartz;
+// Set API key via environment variable
+// CRONRADAR_API_KEY=ck_app_xxxxx
 
-// Get your scheduler
 IScheduler scheduler = await StdSchedulerFactory.GetDefaultScheduler();
-
-// Enable CronRadar monitoring
-await scheduler.MonitorAll();
-
-// Start the scheduler
+await scheduler.MonitorAll();  // 👈 That's it!
 await scheduler.Start();
 ```
 
-Every scheduled job is now monitored automatically.
+All scheduled jobs are now monitored automatically.
 
-## Configuration
-
-Set your API key as an environment variable:
-
-```bash
-# Linux/macOS
-export CRONRADAR_API_KEY=ck_app_xxxxx_yyyyy
-
-# Windows
-set CRONRADAR_API_KEY=ck_app_xxxxx_yyyyy
-```
-
-Or pass it directly:
+## Opt-Out Specific Jobs
 
 ```csharp
-await scheduler.MonitorAll("ck_app_xxxxx_yyyyy");
-```
-
-Get your API key from [cronradar.com/dashboard](https://cronradar.com/dashboard)
-
-## Controlling Monitoring
-
-By default, all scheduled jobs are monitored. Use the `[CronRadar]` attribute to customize behavior:
-
-### Skip Specific Jobs
-
-```csharp
-using CronRadar.Quartz;
-
-[CronRadar(Skip = true)]
-public class InternalMaintenanceJob : IJob
+[SkipMonitor]
+public class InternalTask : IJob
 {
     public async Task Execute(IJobExecutionContext context)
     {
@@ -65,7 +36,7 @@ public class InternalMaintenanceJob : IJob
 }
 ```
 
-### Custom Monitor Keys
+## Custom Monitor Keys
 
 ```csharp
 [CronRadar("critical-payment-processor")]
@@ -73,17 +44,35 @@ public class ProcessPaymentsJob : IJob
 {
     public async Task Execute(IJobExecutionContext context)
     {
-        // Monitored with key "critical-payment-processor"
+        // Monitored with custom key
     }
 }
 ```
 
-## Documentation
+## Configuration
 
-See [cronradar.com/docs/sdks/quartz](https://cronradar.com/docs/sdks/quartz) for full documentation.
+**API Key** (required):
+```bash
+CRONRADAR_API_KEY=ck_app_xxxxx
+```
+
+Or pass directly:
+```csharp
+await scheduler.MonitorAll(apiKey: "ck_app_xxxxx");
+```
+
+**Debug logging** (optional):
+```bash
+CRONRADAR_DEBUG=true
+```
+
+## How It Works
+
+1. Detects all Quartz.NET jobs
+2. Auto-registers monitors on first execution
+3. Tracks start/complete/fail for every run
+4. Never breaks your jobs (all exceptions caught)
 
 ## License
 
 Proprietary - © 2025 CronRadar. All rights reserved.
-
-See [LICENSE](./LICENSE) for details. This SDK may only be used with the CronRadar monitoring service.
