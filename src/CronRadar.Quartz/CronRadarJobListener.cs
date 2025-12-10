@@ -174,19 +174,70 @@ namespace CronRadar.Quartz
 
         /// <summary>
         /// Converts a TimeSpan interval to an approximate cron expression.
+        /// Handles common intervals (minutes, hours, days, weeks) and generates best-fit cron expressions.
         /// </summary>
         private string ConvertIntervalToCron(TimeSpan interval)
         {
-            if (interval.TotalMinutes < 1) return "* * * * *";
-            if (interval.TotalMinutes == 1) return "* * * * *";
-            if (interval.TotalMinutes == 5) return "*/5 * * * *";
-            if (interval.TotalMinutes == 15) return "*/15 * * * *";
-            if (interval.TotalMinutes == 30) return "*/30 * * * *";
-            if (interval.TotalHours == 1) return "0 * * * *";
-            if (interval.TotalHours % 1 == 0 && interval.TotalHours < 24) return $"0 */{(int)interval.TotalHours} * * *";
-            if (interval.TotalDays == 1) return "0 0 * * *";
-            if (interval.TotalDays == 7) return "0 0 * * 0";
-            return "0 * * * *"; // Default to hourly
+            // Sub-minute intervals - run every minute
+            if (interval.TotalMinutes < 1)
+            {
+                return "* * * * *";
+            }
+
+            // Minute-based intervals
+            if (interval.TotalMinutes < 60)
+            {
+                var minutes = (int)interval.TotalMinutes;
+                // Check if it's a clean divisor of 60
+                if (60 % minutes == 0)
+                {
+                    return $"*/{minutes} * * * *";
+                }
+                // Otherwise, run every N minutes (may not align perfectly)
+                return $"*/{minutes} * * * *";
+            }
+
+            // Hour-based intervals
+            if (interval.TotalHours < 24)
+            {
+                var hours = (int)interval.TotalHours;
+                // Check if it's a clean divisor of 24
+                if (24 % hours == 0)
+                {
+                    return $"0 */{hours} * * *";
+                }
+                // Fractional hours - convert to minutes
+                var totalMinutes = (int)interval.TotalMinutes;
+                return $"*/{totalMinutes} * * * *";
+            }
+
+            // Day-based intervals
+            if (interval.TotalDays < 7)
+            {
+                var days = (int)interval.TotalDays;
+                if (days == 1)
+                {
+                    return "0 0 * * *";  // Daily at midnight
+                }
+                // Multiple days: run every N days at midnight
+                // Note: Standard cron doesn't support "every N days", so we approximate
+                return $"0 0 */{days} * *";
+            }
+
+            // Week-based intervals
+            if (interval.TotalDays % 7 == 0)
+            {
+                var weeks = (int)(interval.TotalDays / 7);
+                if (weeks == 1)
+                {
+                    return "0 0 * * 0";  // Weekly on Sunday at midnight
+                }
+                // Multiple weeks: approximate with monthly
+                return "0 0 1 * *";  // Monthly on 1st at midnight
+            }
+
+            // Default: monthly
+            return "0 0 1 * *";  // Monthly on 1st at midnight
         }
     }
 }

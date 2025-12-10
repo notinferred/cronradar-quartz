@@ -29,12 +29,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Depends on base CronRadar SDK -->
-    <!-- For local build, use ProjectReference. For NuGet publishing, switch to PackageReference -->
     <ProjectReference Include="..\..\..\cronradar-dotnet\src\CronRadar\CronRadar.csproj" />
-    <!-- <PackageReference Include="CronRadar" Version="0.0.8" /> -->
-
-    <!-- Quartz.NET dependency (peer dependency - user should have this already) -->
     <PackageReference Include="Quartz" Version="3.0.0" />
   </ItemGroup>
 

@@ -37,41 +37,49 @@ namespace CronRadar.Quartz
                 return scheduler;
             }
 
+            bool shouldInitialize = false;
+
             lock (_initLock)
             {
                 if (_initialized)
                 {
                     Console.WriteLine("[CronRadar.Quartz] Already initialized. Ignoring duplicate call.");
-                    return scheduler;
+                    // Return immediately without holding the lock
                 }
-
-                _initialized = true;
-                _apiKey = apiKey; // Store for listener to use
-
-                if (CronRadar.DebugLoggingEnabled)
+                else
                 {
-                    Console.WriteLine("[CronRadar.Quartz] Initializing MonitorAll mode - use [SkipMonitor] to opt-out");
-                }
-            }
+                    _initialized = true;
+                    _apiKey = apiKey; // Store for listener to use
+                    shouldInitialize = true;
 
-            try
-            {
-                // Register job listener for lifecycle tracking
-                var jobListener = new CronRadarJobListener(_apiKey);
-                scheduler.ListenerManager.AddJobListener(jobListener);
-
-                if (CronRadar.DebugLoggingEnabled)
-                {
-                    Console.WriteLine("[CronRadar.Quartz] ✓ Job listener registered successfully");
+                    if (CronRadar.DebugLoggingEnabled)
+                    {
+                        Console.WriteLine("[CronRadar.Quartz] Initializing MonitorAll mode - use [SkipMonitor] to opt-out");
+                    }
                 }
             }
-            catch (Exception ex)
+
+            if (shouldInitialize)
             {
-                Console.WriteLine($"[CronRadar.Quartz] Failed to initialize: {ex.Message}");
-                // Reset so user can retry
-                lock (_initLock)
+                try
                 {
-                    _initialized = false;
+                    // Register job listener for lifecycle tracking
+                    var jobListener = new CronRadarJobListener(_apiKey);
+                    await Task.Run(() => scheduler.ListenerManager.AddJobListener(jobListener)).ConfigureAwait(false);
+
+                    if (CronRadar.DebugLoggingEnabled)
+                    {
+                        Console.WriteLine("[CronRadar.Quartz] ✓ Job listener registered successfully");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[CronRadar.Quartz] Failed to initialize: {ex.Message}");
+                    // Reset so user can retry
+                    lock (_initLock)
+                    {
+                        _initialized = false;
+                    }
                 }
             }
 
@@ -80,13 +88,16 @@ namespace CronRadar.Quartz
 
         /// <summary>
         /// Synchronous version of MonitorAll for scenarios where async is not available.
-        /// Note: It's recommended to use the async version when possible.
+        /// WARNING: This method uses GetAwaiter().GetResult() which can cause deadlocks in certain contexts
+        /// (e.g., UI applications, ASP.NET pre-Core). It's strongly recommended to use the async version when possible.
         /// </summary>
         /// <param name="scheduler">The Quartz.NET scheduler instance</param>
         /// <param name="apiKey">Optional API key (defaults to CRONRADAR_API_KEY env var)</param>
         /// <returns>The scheduler instance for method chaining</returns>
+        [Obsolete("Use MonitorAll() async version instead to avoid potential deadlocks. This synchronous wrapper may be removed in a future version.", false)]
         public static IScheduler MonitorAllSync(this IScheduler scheduler, string? apiKey = null)
         {
+            // Note: Using GetAwaiter().GetResult() instead of .Result or .Wait() to avoid AggregateException wrapping
             return scheduler.MonitorAll(apiKey).GetAwaiter().GetResult();
         }
     }
