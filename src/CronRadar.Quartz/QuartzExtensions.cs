@@ -85,20 +85,5 @@ namespace CronRadar.Quartz
 
             return scheduler;
         }
-
-        /// <summary>
-        /// Synchronous version of MonitorAll for scenarios where async is not available.
-        /// WARNING: This method uses GetAwaiter().GetResult() which can cause deadlocks in certain contexts
-        /// (e.g., UI applications, ASP.NET pre-Core). It's strongly recommended to use the async version when possible.
-        /// </summary>
-        /// <param name="scheduler">The Quartz.NET scheduler instance</param>
-        /// <param name="apiKey">Optional API key (defaults to CRONRADAR_API_KEY env var)</param>
-        /// <returns>The scheduler instance for method chaining</returns>
-        [Obsolete("Use MonitorAll() async version instead to avoid potential deadlocks. This synchronous wrapper may be removed in a future version.", false)]
-        public static IScheduler MonitorAllSync(this IScheduler scheduler, string? apiKey = null)
-        {
-            // Note: Using GetAwaiter().GetResult() instead of .Result or .Wait() to avoid AggregateException wrapping
-            return scheduler.MonitorAll(apiKey).GetAwaiter().GetResult();
-        }
     }
 }
