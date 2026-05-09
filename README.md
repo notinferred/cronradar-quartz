@@ -113,33 +113,23 @@ public class ProcessPaymentsJob : IJob
 }
 ```
 
-### Override grace period for a specific job
-
-```csharp
-[CronRadarGracePeriod(seconds: 600)]
-public class LongRunningSyncJob : IJob
-{
-    // 10-minute grace period instead of the default 60s
-}
-```
-
 ## Reference
 
 ### `MonitorAll()` extension method
 
 ```csharp
-public static Task MonitorAll(
+public static Task<IScheduler> MonitorAll(
     this IScheduler scheduler,
-    string? apiKey = null,
-    int? defaultGracePeriod = null,
-    CancellationToken cancellationToken = default);
+    string? apiKey = null);
 ```
 
 | Parameter | Type | Required | Notes |
 |---|---|---|---|
 | `apiKey` | `string?` | optional | API key. Falls back to `CRONRADAR_API_KEY` env var if omitted. |
-| `defaultGracePeriod` | `int?` | optional | Seconds. Default for jobs without a `[CronRadarGracePeriod]` attribute. Default: 60. |
-| `cancellationToken` | `CancellationToken` | optional | Standard cancellation. |
+
+Returns the scheduler for chaining.
+
+Grace period defaults to 60 seconds per monitor and can be tuned via the dashboard or by setting `CronRadar.DefaultGracePeriodSeconds` on the base SDK before `MonitorAll()` runs.
 
 ### Attributes
 
@@ -147,7 +137,6 @@ public static Task MonitorAll(
 |---|---|---|
 | `[SkipMonitor]` | class implementing `IJob` | Exclude from monitoring entirely. |
 | `[CronRadar("key")]` | class implementing `IJob` | Override the monitor key. |
-| `[CronRadarGracePeriod(seconds: N)]` | class implementing `IJob` | Per-job grace period override. |
 
 ### Cron expression translation
 
