@@ -14,6 +14,12 @@ namespace CronRadar.Quartz
         private static readonly object _initLock = new object();
         private static string? _apiKey = null;
 
+        /// <summary>API key captured during initialization, used by the reconcile job.</summary>
+        internal static string? ApiKey => _apiKey;
+
+        /// <summary>How often the reconcile job re-declares the schedule (heartbeat), in minutes.</summary>
+        private const int ReconcileIntervalMinutes = 15;
+
         /// <summary>
         /// Enables CronRadar monitoring for all Quartz.NET jobs automatically.
         /// Jobs are monitored using their normalized JobKey (group-name).
@@ -63,13 +69,39 @@ namespace CronRadar.Quartz
             {
                 try
                 {
-                    // Register job listener for lifecycle tracking
-                    var jobListener = new CronRadarJobListener(_apiKey);
-                    await Task.Run(() => scheduler.ListenerManager.AddJobListener(jobListener)).ConfigureAwait(false);
+                    // 1. Execution telemetry: report start/complete/fail as jobs run.
+                    scheduler.ListenerManager.AddJobListener(new CronRadarJobListener(_apiKey));
+
+                    // 2. Declaration: reconcile the full schedule when the scheduler starts,
+                    //    so jobs that have not run yet still get dead-man coverage.
+                    scheduler.ListenerManager.AddSchedulerListener(new CronRadarSchedulerListener(scheduler, _apiKey));
+
+                    // 3. Heartbeat: periodic reconcile so the server never treats a still
+                    //    scheduled job as drifted, and late-added jobs are picked up.
+                    var reconcileJob = JobBuilder.Create<CronRadarReconcileJob>()
+                        .WithIdentity("cronradar-reconcile", "cronradar")
+                        .Build();
+                    var reconcileTrigger = TriggerBuilder.Create()
+                        .WithIdentity("cronradar-reconcile-trigger", "cronradar")
+                        .StartNow()
+                        .WithSimpleSchedule(s => s.WithIntervalInMinutes(ReconcileIntervalMinutes).RepeatForever())
+                        .Build();
+
+                    if (!await scheduler.CheckExists(reconcileJob.Key).ConfigureAwait(false))
+                    {
+                        await scheduler.ScheduleJob(reconcileJob, reconcileTrigger).ConfigureAwait(false);
+                    }
+
+                    // If the scheduler is already running, SchedulerStarted won't fire again —
+                    // reconcile immediately so coverage exists without waiting for the interval.
+                    if (scheduler.IsStarted)
+                    {
+                        await CronRadarReconciler.ReconcileAsync(scheduler, _apiKey).ConfigureAwait(false);
+                    }
 
                     if (CronRadar.DebugLoggingEnabled)
                     {
-                        Console.WriteLine("[CronRadar.Quartz] ✓ Job listener registered successfully");
+                        Console.WriteLine("[CronRadar.Quartz] ✓ Telemetry + reconcile registered successfully");
                     }
                 }
                 catch (Exception ex)

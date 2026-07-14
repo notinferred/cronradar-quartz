@@ -32,8 +32,7 @@ namespace CronRadar.Quartz
                 var jobKey = context.JobDetail.Key;
 
                 // Check for [SkipMonitor] attribute
-                var skipAttr = jobType.GetCustomAttributes(typeof(SkipMonitorAttribute), false);
-                if (skipAttr.Length > 0)
+                if (CronRadarQuartzSchedule.ShouldSkip(jobType))
                 {
                     if (CronRadar.DebugLoggingEnabled)
                     {
@@ -43,12 +42,12 @@ namespace CronRadar.Quartz
                 }
 
                 // Get monitor key from attribute or use normalized JobKey
-                string monitorKey = GetMonitorKey(jobType, jobKey);
+                string monitorKey = CronRadarQuartzSchedule.GetMonitorKey(jobType, jobKey);
                 if (string.IsNullOrWhiteSpace(monitorKey))
                     return;
 
                 // Get schedule from trigger for auto-registration
-                string? schedule = GetScheduleFromTrigger(context.Trigger);
+                string? schedule = CronRadarQuartzSchedule.GetScheduleFromTrigger(context.Trigger);
 
                 if (CronRadar.DebugLoggingEnabled && schedule != null)
                 {
@@ -88,12 +87,11 @@ namespace CronRadar.Quartz
                 var jobKey = context.JobDetail.Key;
 
                 // Check for [SkipMonitor] attribute
-                var skipAttr = jobType.GetCustomAttributes(typeof(SkipMonitorAttribute), false);
-                if (skipAttr.Length > 0)
+                if (CronRadarQuartzSchedule.ShouldSkip(jobType))
                     return;
 
                 // Get monitor key
-                string monitorKey = GetMonitorKey(jobType, jobKey);
+                string monitorKey = CronRadarQuartzSchedule.GetMonitorKey(jobType, jobKey);
                 if (string.IsNullOrWhiteSpace(monitorKey))
                     return;
 
@@ -125,119 +123,5 @@ namespace CronRadar.Quartz
             }
         }
 
-        /// <summary>
-        /// Gets the monitor key from attribute or normalized job key.
-        /// </summary>
-        private string GetMonitorKey(Type jobType, JobKey jobKey)
-        {
-            // Check for [CronRadar("custom-key")] attribute
-            var cronRadarAttr = jobType.GetCustomAttributes(typeof(CronRadarAttribute), false);
-            if (cronRadarAttr.Length > 0)
-            {
-                var attr = (CronRadarAttribute)cronRadarAttr[0];
-                if (!string.IsNullOrWhiteSpace(attr.MonitorKey))
-                {
-                    return CronRadarKeyNormalizer.Normalize(attr.MonitorKey);
-                }
-            }
-
-            // Use normalized JobKey
-            return CronRadarKeyNormalizer.Normalize(jobKey.Group, jobKey.Name);
-        }
-
-        /// <summary>
-        /// Extracts schedule from trigger for auto-registration.
-        /// </summary>
-        private string? GetScheduleFromTrigger(ITrigger trigger)
-        {
-            try
-            {
-                // Cron trigger - use the cron expression directly
-                if (trigger is ICronTrigger cronTrigger)
-                {
-                    return cronTrigger.CronExpressionString;
-                }
-
-                // Simple trigger - convert to approximate cron
-                if (trigger is ISimpleTrigger simpleTrigger && simpleTrigger.RepeatCount != 0)
-                {
-                    return ConvertIntervalToCron(simpleTrigger.RepeatInterval);
-                }
-
-                return null;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Converts a TimeSpan interval to an approximate cron expression.
-        /// Handles common intervals (minutes, hours, days, weeks) and generates best-fit cron expressions.
-        /// </summary>
-        private string ConvertIntervalToCron(TimeSpan interval)
-        {
-            // Sub-minute intervals - run every minute
-            if (interval.TotalMinutes < 1)
-            {
-                return "* * * * *";
-            }
-
-            // Minute-based intervals
-            if (interval.TotalMinutes < 60)
-            {
-                var minutes = (int)interval.TotalMinutes;
-                // Check if it's a clean divisor of 60
-                if (60 % minutes == 0)
-                {
-                    return $"*/{minutes} * * * *";
-                }
-                // Otherwise, run every N minutes (may not align perfectly)
-                return $"*/{minutes} * * * *";
-            }
-
-            // Hour-based intervals
-            if (interval.TotalHours < 24)
-            {
-                var hours = (int)interval.TotalHours;
-                // Check if it's a clean divisor of 24
-                if (24 % hours == 0)
-                {
-                    return $"0 */{hours} * * *";
-                }
-                // Fractional hours - convert to minutes
-                var totalMinutes = (int)interval.TotalMinutes;
-                return $"*/{totalMinutes} * * * *";
-            }
-
-            // Day-based intervals
-            if (interval.TotalDays < 7)
-            {
-                var days = (int)interval.TotalDays;
-                if (days == 1)
-                {
-                    return "0 0 * * *";  // Daily at midnight
-                }
-                // Multiple days: run every N days at midnight
-                // Note: Standard cron doesn't support "every N days", so we approximate
-                return $"0 0 */{days} * *";
-            }
-
-            // Week-based intervals
-            if (interval.TotalDays % 7 == 0)
-            {
-                var weeks = (int)(interval.TotalDays / 7);
-                if (weeks == 1)
-                {
-                    return "0 0 * * 0";  // Weekly on Sunday at midnight
-                }
-                // Multiple weeks: approximate with monthly
-                return "0 0 1 * *";  // Monthly on 1st at midnight
-            }
-
-            // Default: monthly
-            return "0 0 1 * *";  // Monthly on 1st at midnight
-        }
     }
 }
