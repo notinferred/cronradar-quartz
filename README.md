@@ -26,6 +26,8 @@ Or pass it explicitly to `MonitorAll(apiKey: ...)`.
 
 Get the API key from the CronRadar dashboard at [app.cronradar.com](https://app.cronradar.com) under your application's settings. API keys have the form `ck_app_<random>`.
 
+Create a separate CronRadar application and API key for production, staging, and development. Store the key in the deployment platform's secret manager; never commit it, print it, or reuse a production key outside production.
+
 The Quartz integration runs once at scheduler startup and listens to every job execution — no per-job initialization is needed.
 
 ## Quickstart
@@ -202,11 +204,28 @@ Earlier versions exposed a sync `MonitorAll()` extension. The current API is asy
 
 The sync overload is removed; references will fail to compile, which is intentional — agents reading old snippets get a clear signal to update.
 
+## Verification
+
+1. Start the scheduler after awaiting `scheduler.MonitorAll()`.
+2. Confirm each supported recurring trigger appears in the intended CronRadar application with the translated schedule.
+3. Run a job through Quartz.NET and confirm a terminal `success` or `failed` result; discovery alone is not activation.
+4. Use CronRadar's guided reliability drill to verify notification delivery without changing a production job.
+
+Check authentication and outbound HTTPS without printing the key:
+
+```bash
+curl --fail-with-body --silent --show-error --user "$CRONRADAR_API_KEY:" "https://cron.life/api/sync/status"
+```
+
+## Migration
+
+Replace the deprecated synchronous `MonitorAll()` overload with `await scheduler.MonitorAll(apiKey)` after jobs and triggers are registered and before `scheduler.Start()`. Keep existing job keys stable, deploy, confirm reconciliation and one terminal run, then remove any manual wrapper using the same key.
+
 ## Links
 
 - **Documentation:** [docs.cronradar.com](https://docs.cronradar.com)
 - **Agent-friendly index:** [docs.cronradar.com/llms.txt](https://docs.cronradar.com/llms.txt)
-- **OpenAPI spec:** [api.cronradar.com/swagger/v1/swagger.json](https://api.cronradar.com/swagger/v1/swagger.json)
+- **OpenAPI spec:** [docs.cronradar.com/openapi.json](https://docs.cronradar.com/openapi.json)
 - **NuGet:** [nuget.org/packages/CronRadar.Quartz](https://www.nuget.org/packages/CronRadar.Quartz)
 - **GitHub:** [github.com/cronradar/cronradar-quartz](https://github.com/cronradar/cronradar-quartz)
 - **Base SDK:** [nuget.org/packages/CronRadar](https://www.nuget.org/packages/CronRadar)
