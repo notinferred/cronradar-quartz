@@ -214,7 +214,7 @@ The sync overload is removed; references will fail to compile, which is intentio
 Check authentication and outbound HTTPS without printing the key:
 
 ```bash
-curl --fail-with-body --silent --show-error --user "$CRONRADAR_API_KEY:" "https://cron.life/api/sync/status"
+curl --fail-with-body --silent --show-error --user "$CRONRADAR_API_KEY:" "https://cron.life/api/v1/sync/status"
 ```
 
 ## Migration
