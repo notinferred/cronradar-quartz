@@ -223,7 +223,8 @@ Replace the deprecated synchronous `MonitorAll()` overload with `await scheduler
 
 ## Links
 
-- **Documentation:** [docs.cronradar.com](https://docs.cronradar.com)
+- **Documentation:** [docs.cronradar.com/integrations/quartz](https://docs.cronradar.com/integrations/quartz)
+- **Monitoring overview:** [cronradar.com/quartz](https://cronradar.com/quartz)
 - **Agent-friendly index:** [docs.cronradar.com/llms.txt](https://docs.cronradar.com/llms.txt)
 - **OpenAPI spec:** [docs.cronradar.com/openapi.json](https://docs.cronradar.com/openapi.json)
 - **NuGet:** [nuget.org/packages/CronRadar.Quartz](https://www.nuget.org/packages/CronRadar.Quartz)
