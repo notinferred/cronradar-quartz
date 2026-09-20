@@ -209,7 +209,8 @@ The sync overload is removed; references will fail to compile, which is intentio
 1. Start the scheduler after awaiting `scheduler.MonitorAll()`.
 2. Confirm each supported recurring trigger appears in the intended CronRadar application with the translated schedule.
 3. Run a job through Quartz.NET and confirm a terminal `success` or `failed` result; discovery alone is not activation.
-4. Use CronRadar's guided reliability drill to verify notification delivery without changing a production job.
+4. Open the application's **Alerts** tab to choose delivery channels and check recipients. If notifications are managed by the workspace, follow its settings link.
+5. Keep delivery unverified until the intended recipient confirms an alert or an available channel test. To exercise failure handling beforehand, use a harmless job in a separate test application and an agreed test destination; do not deliberately fail a production job.
 
 Check authentication and outbound HTTPS without printing the key:
 
