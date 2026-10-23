@@ -20,7 +20,8 @@ namespace CronRadar.Quartz
                 var attr = (CronRadarAttribute)cronRadarAttr[0];
                 if (!string.IsNullOrWhiteSpace(attr.MonitorKey))
                 {
-                    return CronRadarKeyNormalizer.Normalize(attr.MonitorKey);
+                    // non-null: checked by IsNullOrWhiteSpace above, which netstandard2.0 does not annotate
+                    return CronRadarKeyNormalizer.Normalize(attr.MonitorKey!);
                 }
             }
 

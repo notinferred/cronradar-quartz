@@ -47,7 +47,8 @@ namespace CronRadar.Quartz
                     monitors.Add(new MonitorDefinition
                     {
                         Key = CronRadarQuartzSchedule.GetMonitorKey(detail.JobType, jobKey),
-                        Schedule = schedule
+                        // non-null: checked by IsNullOrWhiteSpace above, which netstandard2.0 does not annotate
+                        Schedule = schedule!
                     });
                 }
 

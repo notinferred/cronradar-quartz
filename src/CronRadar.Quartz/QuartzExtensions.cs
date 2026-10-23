@@ -40,7 +40,9 @@ namespace CronRadar.Quartz
             if (scheduler == null)
             {
                 Console.WriteLine("[CronRadar.Quartz] ERROR: scheduler parameter is null");
-                return scheduler;
+                // Only callers that ignore the non-nullable parameter reach this branch. They get their
+                // null back as before, and the return stays non-nullable for every caller that complies.
+                return scheduler!;
             }
 
             bool shouldInitialize = false;
