@@ -23,6 +23,18 @@ namespace CronRadar.Quartz
         private static readonly ConcurrentDictionary<string, byte> WarnedExpressions = new ConcurrentDictionary<string, byte>();
 
         /// <summary>
+        /// The job's CLR type. Quartz 4 wraps it in a JobType value; Quartz 3 exposes it directly.
+        /// </summary>
+        public static Type JobClrType(IJobDetail jobDetail)
+        {
+#if QUARTZ4
+            return jobDetail.JobType.Type;
+#else
+            return jobDetail.JobType;
+#endif
+        }
+
+        /// <summary>
         /// Gets the monitor key from [CronRadar("key")] or the normalized JobKey.
         /// </summary>
         public static string GetMonitorKey(Type jobType, JobKey jobKey)

@@ -86,17 +86,24 @@ namespace CronRadar.Quartz
                     var reconcileTrigger = TriggerBuilder.Create()
                         .WithIdentity("cronradar-reconcile-trigger", "cronradar")
                         .StartNow()
-                        .WithSimpleSchedule(s => s.WithIntervalInMinutes(ReconcileIntervalMinutes).RepeatForever())
+                        .WithSimpleSchedule(s => s.WithInterval(TimeSpan.FromMinutes(ReconcileIntervalMinutes)).RepeatForever())
                         .Build();
 
-                    if (!await scheduler.CheckExists(reconcileJob.Key).ConfigureAwait(false))
+                    #if QUARTZ4
+                    var reconcileJobExists = await scheduler.Exists(reconcileJob.Key).ConfigureAwait(false);
+                    var schedulerStarted = scheduler.Status == SchedulerStatus.Running;
+#else
+                    var reconcileJobExists = await scheduler.CheckExists(reconcileJob.Key).ConfigureAwait(false);
+                    var schedulerStarted = scheduler.IsStarted;
+#endif
+                    if (!reconcileJobExists)
                     {
                         await scheduler.ScheduleJob(reconcileJob, reconcileTrigger).ConfigureAwait(false);
                     }
 
                     // If the scheduler is already running, SchedulerStarted won't fire again —
                     // reconcile immediately so coverage exists without waiting for the interval.
-                    if (scheduler.IsStarted)
+                    if (schedulerStarted)
                     {
                         await CronRadarReconciler.ReconcileAsync(scheduler, _apiKey).ConfigureAwait(false);
                     }

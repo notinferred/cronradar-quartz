@@ -1,9 +1,16 @@
+#if QUARTZ4
+using QuartzTask = System.Threading.Tasks.ValueTask;
+#else
+using QuartzTask = System.Threading.Tasks.Task;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Quartz;
+#if !QUARTZ4
 using Quartz.Impl.Matchers;
+#endif
 
 namespace CronRadar.Quartz
 {
@@ -17,7 +24,7 @@ namespace CronRadar.Quartz
         private const string Source = "quartz";
         private const string Version = "0.1.1";
 
-        public static async Task ReconcileAsync(IScheduler scheduler, string? apiKey, CancellationToken cancellationToken = default)
+        public static async QuartzTask ReconcileAsync(IScheduler scheduler, string? apiKey, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -28,7 +35,7 @@ namespace CronRadar.Quartz
                 foreach (var jobKey in jobKeys)
                 {
                     var detail = await scheduler.GetJobDetail(jobKey, cancellationToken).ConfigureAwait(false);
-                    if (detail == null || CronRadarQuartzSchedule.ShouldSkip(detail.JobType))
+                    if (detail == null || CronRadarQuartzSchedule.ShouldSkip(CronRadarQuartzSchedule.JobClrType(detail)))
                         continue;
 
                     var triggers = await scheduler.GetTriggersOfJob(jobKey, cancellationToken).ConfigureAwait(false);
@@ -46,7 +53,7 @@ namespace CronRadar.Quartz
 
                     monitors.Add(new MonitorDefinition
                     {
-                        Key = CronRadarQuartzSchedule.GetMonitorKey(detail.JobType, jobKey),
+                        Key = CronRadarQuartzSchedule.GetMonitorKey(CronRadarQuartzSchedule.JobClrType(detail), jobKey),
                         // non-null: checked by IsNullOrWhiteSpace above, which netstandard2.0 does not annotate
                         Schedule = schedule!
                     });
@@ -73,7 +80,11 @@ namespace CronRadar.Quartz
     [DisallowConcurrentExecution]
     public class CronRadarReconcileJob : IJob
     {
-        public Task Execute(IJobExecutionContext context)
+        #if QUARTZ4
+        public QuartzTask Execute(IJobExecutionContext context, CancellationToken cancellationToken)
+#else
+        public QuartzTask Execute(IJobExecutionContext context)
+#endif
         {
             return CronRadarReconciler.ReconcileAsync(context.Scheduler, QuartzExtensions.ApiKey, context.CancellationToken);
         }

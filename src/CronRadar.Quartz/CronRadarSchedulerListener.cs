@@ -1,3 +1,8 @@
+#if QUARTZ4
+using QuartzTask = System.Threading.Tasks.ValueTask;
+#else
+using QuartzTask = System.Threading.Tasks.Task;
+#endif
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,36 +26,50 @@ namespace CronRadar.Quartz
             _apiKey = apiKey;
         }
 
-        public Task SchedulerStarted(CancellationToken cancellationToken = default)
+#if QUARTZ4
+        // Every ISchedulerListener member has a default in Quartz 4, and a callback without the
+        // leading IScheduler parameter compiles but is never called.
+        public QuartzTask SchedulerStarted(IScheduler scheduler, CancellationToken cancellationToken = default)
+            => CronRadarReconciler.ReconcileAsync(_scheduler, _apiKey, cancellationToken);
+
+        // Declaration is idempotent, so reflecting add/remove promptly is safe.
+        public QuartzTask JobAdded(IScheduler scheduler, IJobDetail jobDetail, CancellationToken cancellationToken = default)
+            => CronRadarReconciler.ReconcileAsync(_scheduler, _apiKey, cancellationToken);
+
+        public QuartzTask JobDeleted(IScheduler scheduler, JobKey jobKey, CancellationToken cancellationToken = default)
+            => CronRadarReconciler.ReconcileAsync(_scheduler, _apiKey, cancellationToken);
+#else
+        public QuartzTask SchedulerStarted(CancellationToken cancellationToken = default)
         {
             return CronRadarReconciler.ReconcileAsync(_scheduler, _apiKey, cancellationToken);
         }
 
         // Declaration is idempotent, so reflecting add/remove promptly is safe.
-        public Task JobAdded(IJobDetail jobDetail, CancellationToken cancellationToken = default)
+        public QuartzTask JobAdded(IJobDetail jobDetail, CancellationToken cancellationToken = default)
             => CronRadarReconciler.ReconcileAsync(_scheduler, _apiKey, cancellationToken);
 
-        public Task JobDeleted(JobKey jobKey, CancellationToken cancellationToken = default)
+        public QuartzTask JobDeleted(JobKey jobKey, CancellationToken cancellationToken = default)
             => CronRadarReconciler.ReconcileAsync(_scheduler, _apiKey, cancellationToken);
 
         // Remaining members are not relevant to declaration.
-        public Task JobScheduled(ITrigger trigger, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task JobUnscheduled(TriggerKey triggerKey, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task TriggerFinalized(ITrigger trigger, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task TriggerPaused(TriggerKey triggerKey, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task TriggersPaused(string? triggerGroup, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task TriggerResumed(TriggerKey triggerKey, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task TriggersResumed(string? triggerGroup, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task JobInterrupted(JobKey jobKey, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task JobPaused(JobKey jobKey, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task JobsPaused(string jobGroup, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task JobResumed(JobKey jobKey, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task JobsResumed(string jobGroup, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task SchedulerError(string msg, SchedulerException cause, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task SchedulerInStandbyMode(CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task SchedulerStarting(CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task SchedulerShutdown(CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task SchedulerShuttingdown(CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task SchedulingDataCleared(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public QuartzTask JobScheduled(ITrigger trigger, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask JobUnscheduled(TriggerKey triggerKey, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask TriggerFinalized(ITrigger trigger, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask TriggerPaused(TriggerKey triggerKey, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask TriggersPaused(string? triggerGroup, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask TriggerResumed(TriggerKey triggerKey, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask TriggersResumed(string? triggerGroup, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask JobInterrupted(JobKey jobKey, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask JobPaused(JobKey jobKey, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask JobsPaused(string jobGroup, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask JobResumed(JobKey jobKey, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask JobsResumed(string jobGroup, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask SchedulerError(string msg, SchedulerException cause, CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask SchedulerInStandbyMode(CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask SchedulerStarting(CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask SchedulerShutdown(CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask SchedulerShuttingdown(CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+        public QuartzTask SchedulingDataCleared(CancellationToken cancellationToken = default) => QuartzTask.CompletedTask;
+#endif
     }
 }

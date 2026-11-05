@@ -1,3 +1,8 @@
+#if QUARTZ4
+using QuartzTask = System.Threading.Tasks.ValueTask;
+#else
+using QuartzTask = System.Threading.Tasks.Task;
+#endif
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,11 +29,11 @@ namespace CronRadar.Quartz
         /// Called when a job is about to be executed.
         /// Signals job start for lifecycle tracking with auto-registration.
         /// </summary>
-        public async Task JobToBeExecuted(IJobExecutionContext context, CancellationToken cancellationToken = default)
+        public async QuartzTask JobToBeExecuted(IJobExecutionContext context, CancellationToken cancellationToken = default)
         {
             try
             {
-                var jobType = context.JobDetail.JobType;
+                var jobType = CronRadarQuartzSchedule.JobClrType(context.JobDetail);
                 var jobKey = context.JobDetail.Key;
 
                 // Check for [SkipMonitor] attribute
@@ -70,20 +75,20 @@ namespace CronRadar.Quartz
         /// <summary>
         /// Called when a job execution was vetoed (prevented from executing).
         /// </summary>
-        public Task JobExecutionVetoed(IJobExecutionContext context, CancellationToken cancellationToken = default)
+        public QuartzTask JobExecutionVetoed(IJobExecutionContext context, CancellationToken cancellationToken = default)
         {
-            return Task.CompletedTask;
+            return QuartzTask.CompletedTask;
         }
 
         /// <summary>
         /// Called after a job has been executed.
         /// Signals job completion or failure for lifecycle tracking.
         /// </summary>
-        public async Task JobWasExecuted(IJobExecutionContext context, JobExecutionException? jobException, CancellationToken cancellationToken = default)
+        public async QuartzTask JobWasExecuted(IJobExecutionContext context, JobExecutionException? jobException, CancellationToken cancellationToken = default)
         {
             try
             {
-                var jobType = context.JobDetail.JobType;
+                var jobType = CronRadarQuartzSchedule.JobClrType(context.JobDetail);
                 var jobKey = context.JobDetail.Key;
 
                 // Check for [SkipMonitor] attribute
