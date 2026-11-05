@@ -235,4 +235,4 @@ Replace the deprecated synchronous `MonitorAll()` overload with `await scheduler
 
 ## License
 
-© 2026 [CronRadar](https://cronradar.com) · Proprietary — see [LICENSE](./LICENSE).
+© 2026 [CronRadar](https://cronradar.com) · MIT — see [LICENSE](./LICENSE).
