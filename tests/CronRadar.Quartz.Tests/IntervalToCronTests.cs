@@ -6,36 +6,16 @@ using Xunit;
 namespace CronRadar.Quartz.Tests;
 
 /// <summary>
-/// Tests for the ConvertIntervalToCron method in CronRadarJobListener.
+/// Tests for the ConvertIntervalToCron method in CronRadarQuartzSchedule.
 /// Verifies that various time intervals are correctly converted to cron expressions.
 /// </summary>
 public class IntervalToCronTests
 {
-    /// <summary>
-    /// Invokes the private ConvertIntervalToCron method via reflection.
-    /// </summary>
-    private string ConvertIntervalToCron(TimeSpan interval)
-    {
-        // Get the internal listener type
-        var listenerType = typeof(QuartzExtensions).Assembly.GetType("CronRadar.Quartz.CronRadarJobListener");
-        if (listenerType == null)
-            throw new InvalidOperationException("Could not find CronRadarJobListener type");
-
-        // Get the constructor (internal class has internal constructor accessible via NonPublic)
-        var constructors = listenerType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        if (constructors.Length == 0)
-            throw new InvalidOperationException("No constructors found on CronRadarJobListener");
-
-        // Create instance with null API key
-        var instance = constructors[0].Invoke(new object?[] { null });
-
-        // Get and invoke the private method
-        var method = listenerType.GetMethod("ConvertIntervalToCron", BindingFlags.NonPublic | BindingFlags.Instance);
-        if (method == null)
-            throw new InvalidOperationException("Could not find ConvertIntervalToCron method");
-
-        return (string)method.Invoke(instance, new object[] { interval })!;
-    }
+    private string ConvertIntervalToCron(TimeSpan interval) =>
+        (string)typeof(QuartzExtensions).Assembly
+            .GetType("CronRadar.Quartz.CronRadarQuartzSchedule")!
+            .GetMethod("ConvertIntervalToCron", BindingFlags.Public | BindingFlags.Static)!
+            .Invoke(null, new object[] { interval })!;
 
     #region Minute-Based Intervals
 

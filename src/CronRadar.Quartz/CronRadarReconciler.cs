@@ -15,7 +15,7 @@ namespace CronRadar.Quartz
     internal static class CronRadarReconciler
     {
         private const string Source = "quartz";
-        private const string Version = "0.1.0";
+        private const string Version = "0.1.1";
 
         public static async Task ReconcileAsync(IScheduler scheduler, string? apiKey, CancellationToken cancellationToken = default)
         {
