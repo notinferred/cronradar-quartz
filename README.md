@@ -12,7 +12,7 @@ Built on top of the [`CronRadar`](https://www.nuget.org/packages/CronRadar) base
 dotnet add package CronRadar.Quartz
 ```
 
-Targets `net6.0`, `net7.0`, `net8.0`, `net9.0`. Compatible with Quartz.NET 3.13+. For Quartz.NET 4, which requires .NET 10, install `CronRadar.Quartz4` instead: `dotnet add package CronRadar.Quartz4`. The setup is the same.
+Targets `net6.0` through `net10.0`. On .NET 10 it uses Quartz.NET 4; on earlier frameworks it uses Quartz.NET 3.13+. If you stay on Quartz.NET 3 on .NET 10, keep `CronRadar.Quartz` at 0.1.1.
 
 ## Setup
 

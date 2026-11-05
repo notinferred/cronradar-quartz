@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\CronRadar.Quartz4\CronRadar.Quartz4.csproj" />
+    <ProjectReference Include="..\..\src\CronRadar.Quartz\CronRadar.Quartz.csproj" />
     <!-- The translation rules are shared source, so the Quartz 3 cases guard both packages. -->
     <Compile Include="..\CronRadar.Quartz.Tests\CronTranslationTests.cs" />
   </ItemGroup>

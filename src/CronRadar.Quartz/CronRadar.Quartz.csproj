@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
 
     <!-- Package Information -->
     <PackageId>CronRadar.Quartz</PackageId>
-    <Version>0.1.1</Version>
-    <AssemblyVersion>0.1.1.0</AssemblyVersion>
-    <FileVersion>0.1.1.0</FileVersion>
+    <Version>0.2.0</Version>
+    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <FileVersion>0.2.0.0</FileVersion>
     <Authors>CronRadar</Authors>
     <Company>CronRadar</Company>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -21,7 +21,7 @@
     <PackageTags>cronradar;quartz;quartz.net;scheduled-jobs;monitoring;missed-jobs;failed-jobs;stuck-jobs;alerts</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Clarifies scheduled-job reliability coverage and package discovery metadata; runtime behavior is unchanged.</PackageReleaseNotes>
+    <PackageReleaseNotes>Adds Quartz.NET 4 support on .NET 10. Earlier target frameworks stay on Quartz.NET 3.</PackageReleaseNotes>
     <RepositoryType>git</RepositoryType>
 
     <!-- Build Configuration -->
@@ -30,12 +30,18 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
+  <!-- Quartz 4 requires .NET 10 and is binary-incompatible with Quartz 3, so the target framework selects the Quartz major. -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <DefineConstants>$(DefineConstants);QUARTZ4</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\cronradar-dotnet\src\CronRadar\CronRadar.csproj" />
+    <PackageReference Include="Quartz" Version="4.7.2" Condition="'$(TargetFramework)' == 'net10.0'" />
     <!-- 3.13.0 is the first Quartz whose dependency tree has no known vulnerabilities: 3.0.x pulls
          System.Data.SqlClient (GHSA-98g6-xh36-x2p7), 3.1.x Microsoft.Data.SqlClient 2.0.0, and through
          3.12 System.Configuration.ConfigurationManager reaches System.Drawing.Common 4.7.0 (GHSA-rxg9-xrhp-64gj) -->
-    <PackageReference Include="Quartz" Version="3.13.0" />
+    <PackageReference Include="Quartz" Version="3.13.0" Condition="'$(TargetFramework)' != 'net10.0'" />
   </ItemGroup>
 
   <ItemGroup>
