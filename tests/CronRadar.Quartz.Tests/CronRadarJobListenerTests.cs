@@ -209,6 +209,23 @@ public class CronRadarJobListenerTests : IDisposable
         Assert.Contains(_capturedUrls, url => url.Contains("my-reports-daily-report"));
     }
 
+    [Fact]
+    public async Task JobToBeExecuted_ShortensJobKeyOverLimit_ToSharedVector()
+    {
+        // Shared test vector from docs/SDK_SPECIFICATION.md "Monitor Keys": group "abcdef" + name gives the vector input.
+        var mockHandler = SetupMockHandler();
+        InjectMockHttpClient(mockHandler);
+        var name = string.Concat(System.Linq.Enumerable.Repeat("abcdef-", 14)) + "end";
+        var expected = string.Concat(System.Linq.Enumerable.Repeat("abcdef-", 12)) + "abcdef-4f91bd6e";
+
+        var listener = CreateListener();
+        var context = CreateJobExecutionContext<TestJob>("abcdef", name);
+
+        await listener.JobToBeExecuted(context);
+
+        Assert.Contains(_capturedUrls, url => url.Contains($"/api/v1/ping/{expected}/"));
+    }
+
     #endregion
 
     #region JobWasExecuted Tests

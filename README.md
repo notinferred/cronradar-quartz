@@ -98,7 +98,7 @@ public class InternalCleanupJob : IJob
 
 ### Override the monitor key
 
-By default, the monitor key is derived from the Quartz `JobKey` (`group.name`, lowercased and normalized). Override it explicitly:
+By default, the monitor key is derived from the Quartz `JobKey` (`group.name`, lowercased and normalized). A key longer than 100 characters keeps its first 91 characters and ends with a hyphen and 8 hex characters of its SHA-256, so it stays stable and distinct. Override it explicitly:
 
 ```csharp
 using CronRadar.Quartz;
@@ -131,7 +131,7 @@ public static Task<IScheduler> MonitorAll(
 
 Returns the scheduler for chaining.
 
-Grace period defaults to 60 seconds per monitor and can be tuned via the dashboard or by setting `CronRadar.DefaultGracePeriodSeconds` on the base SDK before `MonitorAll()` runs.
+Grace period defaults to 60 seconds per monitor and can be tuned via the dashboard or by setting `CronRadar.CronRadar.DefaultGracePeriodSeconds` on the base SDK before `MonitorAll()` runs.
 
 ### Attributes
 
